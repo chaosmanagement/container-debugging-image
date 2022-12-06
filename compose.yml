@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  cdi:
+    image: pidpawel/container-debugging-image:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_PORT: 8080
+      DEBUG_HTTP: true
+      DEBUG_SERVER: true
+      DEBUG_CLIENT: true
