@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/netip"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -79,24 +80,25 @@ func printKV(w http.ResponseWriter, k, v string) {
 	fmt.Fprintf(w, "%s: %s\n", padRight(28, k), v)
 }
 
+func printSpacer(w http.ResponseWriter) {
+	fmt.Fprint(w, "\n")
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	renderedSomething := false
+	printKV(w, "Timestamp", strconv.FormatInt(time.Now().Unix(), 10))
+	printSpacer(w)
 
 	if isEnvVariableTrue("DEBUG_HTTP") {
-		renderedSomething = true
-
 		printKV(w, "HTTP URL", r.URL.String())
 		printKV(w, "HTTP Host", r.Host)
 		printKV(w, "HTTP Listen port", port)
 		printKV(w, "HTTP Referer", r.Referer())
 		printKV(w, "HTTP User agent", r.UserAgent())
 
-		fmt.Fprint(w, "\n")
+		printSpacer(w)
 	}
 
 	if isEnvVariableTrue("DEBUG_SERVER") {
-		renderedSomething = true
-
 		printKV(w, "Server hostname", getHostname())
 
 		localAddresses := getLocalAddresses(r.Context())
@@ -106,12 +108,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		fmt.Fprint(w, "\n")
+		printSpacer(w)
 	}
 
 	if isEnvVariableTrue("DEBUG_CLIENT") {
-		renderedSomething = true
-
 		clientIp, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
 			clientIp = "unknown"
@@ -126,10 +126,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		}
 		printKV(w, "Client's IP", clientIp)
-	}
 
-	if !renderedSomething {
-		fmt.Fprintf(w, "You need to enable at least one section via the environment variables for this software to be useful!\n")
+		printSpacer(w)
 	}
 }
 
