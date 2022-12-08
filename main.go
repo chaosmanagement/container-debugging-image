@@ -76,6 +76,27 @@ func getLocalAddresses(ctx context.Context) []string {
 	return localAddresses
 }
 
+func getClientIp(r *http.Request, shortRevdns bool) string {
+	clientIp, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return "unknown"
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), time.Millisecond*100)
+	defer cancel()
+
+	revNames, err := net.DefaultResolver.LookupAddr(ctx, clientIp)
+	if err != nil {
+		return clientIp
+	}
+
+	if shortRevdns {
+		return fmt.Sprintf("%s (%s)", clientIp, strings.Join(revNames, ", "))
+	} else {
+		return fmt.Sprintf("%s %s", padRight(39, clientIp), strings.Join(revNames, ", "))
+	}
+}
+
 func printKV(w http.ResponseWriter, k, v string) {
 	fmt.Fprintf(w, "%s: %s\n", padRight(28, k), v)
 }
@@ -102,33 +123,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		printKV(w, "Server hostname", getHostname())
 
 		localAddresses := getLocalAddresses(r.Context())
-		if len(localAddresses) != 0 {
-			for _, addr := range localAddresses {
-				printKV(w, "Server's address", addr)
-			}
+		for _, addr := range localAddresses {
+			printKV(w, "Server's address", addr)
 		}
 
 		printSpacer(w)
 	}
 
 	if isEnvVariableTrue("DEBUG_CLIENT") {
-		clientIp, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			clientIp = "unknown"
-		} else {
-			ctx, cancel := context.WithTimeout(r.Context(), time.Millisecond*100)
-			defer cancel()
-
-			revNames, err := net.DefaultResolver.LookupAddr(ctx, clientIp)
-			if err == nil {
-				clientIp = fmt.Sprintf("%s %s", clientIp, padRight(39, strings.Join(revNames, ", ")))
-			}
-
-		}
-		printKV(w, "Client's IP", clientIp)
+		printKV(w, "Client's IP", getClientIp(r, false))
 
 		printSpacer(w)
 	}
+
+	fmt.Printf("Handled request for %s, path http://%s%s\n", getClientIp(r, true), r.Host, r.URL.String())
 }
 
 func main() {
