@@ -9,6 +9,8 @@ Look at `compose.yml` - all the important settings are there.
 ## Example response?
 
 ```none
+Timestamp                   : 1670514076
+
 HTTP URL                    : /
 HTTP Host                   : localhost:8080
 HTTP Listen port            : 8080
@@ -18,7 +20,7 @@ HTTP User agent             : curl/7.81.0
 Server hostname             : afbd81cba828
 Server's address            : 172.22.0.2                              afbd81cba828
 
-Client's IP                 : 172.22.0.1 devbox
+Client's IP                 : 172.22.0.1                              devbox
 ```
 
 Each section can be turned on/off depending on your needs/requirements (again - see `compose.yml`).
